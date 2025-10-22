@@ -1,0 +1,8 @@
+project_id = "vmexztzutitptnsbefjp"
+
+# Sets the Deno version for the project
+[env]
+DENO_VERSION = "v2.1.4"
+
+[functions.generate-recipe]
+verify_jwt = false

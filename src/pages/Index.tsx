@@ -4,6 +4,7 @@ import { RecipeDisplay } from "@/components/RecipeDisplay";
 import { Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-food.jpg";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Recipe {
   title: string;
@@ -30,38 +31,26 @@ const Index = () => {
     setRecipe(null);
 
     try {
-      // Simulated API call - will be replaced with actual Lovable AI integration
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      // Mock recipe data
-      const mockRecipe: Recipe = {
-        title: "Mediterranean Herb Chicken",
-        cookingTime: "25 minutes",
-        servings: servings,
-        ingredients: ingredients.map(ing => `${Math.floor(Math.random() * 3) + 1} ${ing}`),
-        steps: [
-          "Preheat your oven to 375°F (190°C).",
-          "Season the main protein with herbs and spices.",
-          "Heat oil in a pan over medium-high heat.",
-          "Sear the protein for 3-4 minutes on each side until golden.",
-          "Transfer to the oven and bake for 15 minutes.",
-          "Let rest for 5 minutes before serving."
-        ],
-        tips: "For extra flavor, marinate the ingredients for 30 minutes before cooking. Serve with fresh herbs and a squeeze of lemon.",
-        nutrition: {
-          calories: "320 kcal",
-          protein: "38g",
-          fat: "12g",
-          carbs: dietary === "keto" ? "3g" : "15g"
-        },
-        pairing: "A crisp Sauvignon Blanc or light Pinot Grigio"
-      };
+      const { data, error } = await supabase.functions.invoke('generate-recipe', {
+        body: { ingredients, dietary, servings }
+      });
 
-      setRecipe(mockRecipe);
+      if (error) {
+        console.error("Error generating recipe:", error);
+        toast.error(error.message || "Failed to generate recipe. Please try again.");
+        return;
+      }
+
+      if (!data?.recipe) {
+        toast.error("Failed to generate recipe. Please try again.");
+        return;
+      }
+
+      setRecipe(data.recipe);
       toast.success("Recipe generated successfully!");
     } catch (error) {
-      toast.error("Failed to generate recipe. Please try again.");
       console.error("Error generating recipe:", error);
+      toast.error("Failed to generate recipe. Please try again.");
     } finally {
       setIsLoading(false);
     }
